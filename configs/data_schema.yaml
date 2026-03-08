@@ -1,0 +1,138 @@
+schema_version: "1.0.0"
+
+# Field definitions berdasarkan data Anda
+fields:
+  # Demografi
+  - name: wilayah
+    type: string
+    required: true
+    description: "Wilayah administratif"
+    
+  - name: pendidikan
+    type: string
+    required: true
+    
+  - name: pekerjaan_kepala_keluarga
+    type: string
+    required: true
+    
+  - name: usia_kepala
+    type: integer
+    required: true
+    min_value: 17
+    max_value: 100
+    
+  - name: jumlah_anggota
+    type: integer
+    required: true
+    min_value: 1
+    max_value: 50
+    
+  # Ekonomi
+  - name: pendapatan
+    type: integer
+    required: true
+    min_value: 0
+    
+  - name: pendapatan_perkapita
+    type: integer
+    required: true
+    min_value: 0
+    
+  - name: tabungan
+    type: integer
+    required: true
+    min_value: 0
+    
+  # Aset
+  - name: motor
+    type: integer
+    required: true
+    min_value: 0
+    
+  - name: mobil
+    type: integer
+    required: true
+    min_value: 0
+    
+  - name: kulkas
+    type: integer
+    required: true
+    min_value: 0
+    
+  - name: tv
+    type: integer
+    required: true
+    min_value: 0
+    
+  - name: mesin_cuci
+    type: integer
+    required: true
+    min_value: 0
+    
+  # Perumahan
+  - name: status_rumah
+    type: string
+    required: true
+    
+  - name: luas_rumah
+    type: integer
+    required: true
+    min_value: 0
+    
+  - name: rasio_luas
+    type: float
+    required: true
+    min_value: 0
+    
+  - name: daya_listrik
+    type: integer
+    required: true
+    min_value: 0
+    
+  - name: air_layak
+    type: integer
+    required: true
+    min_value: 0
+    max_value: 1
+    
+  - name: sanitasi_layak
+    type: integer
+    required: true
+    min_value: 0
+    max_value: 1
+    
+  - name: overall_kelayakan_rumah
+    type: float
+    required: true
+    min_value: 0
+    max_value: 1
+    
+  # Label Target
+  - name: wealth_index
+    type: float
+    required: true
+    
+  - name: desil
+    type: integer
+    required: true
+    min_value: 1
+    max_value: 10
+    
+  - name: kategori
+    type: string
+    required: true
+    allowed_values:
+      - "Sangat Miskin"
+      - "Miskin"
+      - "Rentan Miskin"
+      - "Hampir Miskin"
+      - "Menengah Bawah"
+      - "Menengah Ke Atas"
+
+# Metadata fields (akan ditambahkan otomatis)
+metadata_fields:
+  - household_id
+  - timestamp_processed
+  - source_file
+  - validation_status

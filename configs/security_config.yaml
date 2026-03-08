@@ -1,0 +1,23 @@
+# Konfigurasi keamanan data - UU PDP Compliance
+security_version: "1.0.0"
+
+pii_fields:
+  - field: wilayah
+    action: keep
+    reason: "Diperlukan untuk analisis geografis, level agregat aman"
+    
+# Encryption settings
+encryption:
+  algorithm: AES-256
+  enabled: true
+  
+# Access control
+access_control:
+  log_all_access: true
+  require_authentication: true
+  
+# Audit
+audit:
+  enabled: true
+  log_file: "data/logs/audit_log.json"
+  retention_days: 365

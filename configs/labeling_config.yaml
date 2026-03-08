@@ -1,0 +1,42 @@
+labeling_version: "1.0.0"
+
+# Kategori mapping
+categories:
+  - name: "Sangat Miskin"
+    code: "SM"
+    priority: 1
+    description: "Di bawah garis kemiskinan ekstrem"
+    
+  - name: "Miskin"
+    code: "M"
+    priority: 2
+    description: "Di bawah garis kemiskinan"
+    
+  - name: "Rentan Miskin"
+    code: "RM"
+    priority: 3
+    description: "Baru di atas garis kemiskinan, rentan jatuh kembali"
+    
+  - name: "Hampir Miskin"
+    code: "HM"
+    priority: 4
+    description: "Mendekati garis kemiskinan dari atas"
+    
+  - name: "Menengah Bawah"
+    code: "MB"
+    priority: 5
+    description: "Kesejahteraan menengah level bawah"
+    
+  - name: "Menengah Ke Atas"
+    code: "MA"
+    priority: 6
+    description: "Kesejahteraan menengah level atas"
+
+# Output format untuk LLM training
+output_format:
+  type: json
+  required_fields:
+    - kategori
+    - confidence
+    - reasoning
+    - key_factors

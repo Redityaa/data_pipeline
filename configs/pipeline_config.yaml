@@ -1,0 +1,26 @@
+pipeline_version: "1.0.0"
+
+# Processing settings
+processing:
+  chunk_size: 10000  # Process 10k records at a time for 1M records
+  max_workers: 4
+  memory_limit_gb: 8
+  
+# Validation settings
+validation:
+  stop_on_critical_error: true
+  error_threshold: 0.1  # 10% error rate allowed
+  log_invalid_records: true
+  
+# Output settings
+output:
+  format: "jsonl"  # JSON Lines for LLM training
+  compression: false
+  split_files: true
+  records_per_file: 100000
+  
+# Logging
+logging:
+  level: "INFO"
+  file: "data/logs/pipeline.log"
+  console: true

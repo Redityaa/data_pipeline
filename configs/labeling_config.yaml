@@ -1,5 +1,36 @@
 labeling_version: "1.0.0"
 
+# Output format
+output_format:
+  type: json
+  required_fields:
+    - kategori
+    - confidence
+    - reasoning
+    - key_factors
+
+# Reasoning template
+reasoning_template: |
+  Rumah tangga ini dikategorikan sebagai {kategori} berdasarkan analisis berikut:
+  
+  **Kondisi Ekonomi:**
+  - Pendapatan per kapita: Rp {pendapatan_perkapita:,}
+  - Tabungan: Rp {tabungan:,}
+  
+  **Aset yang Dimiliki:**
+  - Kendaraan: {motor} motor, {mobil} mobil
+  - Elektronik: {kulkas} kulkas, {tv} TV, {mesin_cuci} mesin cuci
+  
+  **Kondisi Perumahan:**
+  - Luas rumah: {luas_rumah} m²
+  - Daya listrik: {daya_listrik} VA
+  - Kelayakan rumah: {overall_kelayakan_rumah}
+  
+  **Faktor Kerentanan:**
+  - {faktor_kerentanan}
+  
+  **Tingkat Kepercayaan:** {confidence}%
+
 # Kategori mapping
 categories:
   - name: "Sangat Miskin"

@@ -74,18 +74,12 @@ class ETLPipeline:
                 logger.info(f"Processing chunk {chunk_count} ({len(chunk_df)} records)")
                 
                 # ---------------------------------------------------------
-                # STEP 0: SANITIZATION (The fix for your TypeError)
+                # STEP 0: SANITIZATION 
                 # ---------------------------------------------------------
-                # Strip commas from all object (string) columns and force numeric coercion
-                # where applicable. 
                 for col in chunk_df.select_dtypes(include=['object']).columns:
-                    # Bersihkan koma jika ada
                     if chunk_df[col].astype(str).str.contains(',').any():
                         chunk_df[col] = chunk_df[col].astype(str).str.replace(',', '', regex=False)
                     
-                    # Konversi secara eksplisit.
-                    # Jika seluruh kolom bisa menjadi angka, jadikan angka. 
-                    # Jika ada teks (seperti kolom Nama/Alamat), tangkap errornya dan biarkan tetap sebagai string.
                     try:
                         chunk_df[col] = pd.to_numeric(chunk_df[col])
                     except (ValueError, TypeError):
@@ -98,13 +92,10 @@ class ETLPipeline:
                     validation_result = self.schema_validator.validate_dataframe(chunk_df)
                     
                     if validation_result['status'] == 'FAIL':
-                        # Log the errors so you know what is failing
                         logger.warning(f"Chunk {chunk_count} had {validation_result['invalid_rows']} invalid rows.")
                         
-                        # Use the mask to drop the bad rows from the chunk!
                         chunk_df = chunk_df[validation_result['valid_mask']].copy()
                         
-                        # If the whole chunk was garbage, skip the rest of the steps
                         if chunk_df.empty:
                              logger.warning(f"Chunk {chunk_count} is empty after validation. Skipping.")
                              continue
@@ -112,8 +103,15 @@ class ETLPipeline:
                 # ---------------------------------------------------------
                 # STEP 2 & 3: QUALITY & SECURITY
                 # ---------------------------------------------------------
-                self.quality_checker.generate_quality_report(chunk_df)
-                
+                quality_report, chunk_df = self.quality_checker.generate_quality_report(
+                    chunk_df,
+                    auto_clean=True
+                )
+                self.quality_checker.save_quality_report(
+                    quality_report,
+                    str(output_path / 'quality_reports' / f'quality_report_chunk_{chunk_count}.json')
+                )
+
                 if not skip_security:
                     chunk_df = self.pii_scrubber.scrub_dataframe(chunk_df)
                 

@@ -1,6 +1,8 @@
+from unittest import result
+
 import pandas as pd
 import numpy as np
-from typing import Dict, List
+from typing import Dict, List, Optional
 import logging
 
 logger = logging.getLogger(__name__)
@@ -8,6 +10,7 @@ logger = logging.getLogger(__name__)
 class DataQualityChecker:
     """
     Checker untuk kualitas data (completeness, uniqueness, consistency)
+    dengan kemampuan auto-cleaning untuk outliers
     """
     
     def __init__(self):
@@ -16,6 +19,20 @@ class DataQualityChecker:
             'duplicate_threshold': 0.001,  # 0.1% duplikat
             'outlier_threshold': 0.05  # 5% outlier
         }
+    
+        # Kolom binary yang tidak perlu di-check outlier
+        self.binary_columns = [
+            'motor', 'mobil', 'kulkas', 'tv', 'mesin_cuci',
+            'tabungan', 'air_layak', 'sanitasi_layak',
+            'overall_kelayakan_rumah'
+        ]
+
+        # Kolom continuous yang perlu di-clean outliers
+        self.continuous_columns = [
+            'pendapatan', 'pendapatan_perkapita', 'daya_listrik',
+            'luas_rumah', 'rasio_luas', 'jumlah_anggota',
+            'usia_kepala', 'wealth_index', 'desil'
+        ]
     
     def check_completeness(self, df: pd.DataFrame) -> Dict:
         """Check kelengkapan data"""
@@ -49,14 +66,14 @@ class DataQualityChecker:
             'status': 'PASS' if duplicate_rate < self.thresholds['duplicate_threshold'] else 'FAIL'
         }
     
-    def check_numeric_ranges(self, df: pd.DataFrame, columns: List[str]) -> Dict:
-        """Check nilai numeric dalam range yang wajar"""
+    def check_numeric_ranges(self, df: pd.DataFrame, columns: List[str], auto_clean: bool = False) -> Dict:
+        """Check nilai numeric dalam range yang wajar dengan opsi auto-cleaning"""
         outliers = {}
-        
-        for col in columns:
-            if col not in df.columns:
-                continue
-            
+        cleaned_count = 0
+
+        columns_to_check = [col for col in self.continuous_columns if col in df.columns]
+
+        for col in columns_to_check:
             if df[col].dtype not in ['int64', 'float64']:
                 continue
             
@@ -72,19 +89,31 @@ class DataQualityChecker:
             
             if outlier_count > 0:
                 outliers[col] = {
-                    'count': outlier_count,
-                    'rate': outlier_count / len(df),
-                    'bounds': [lower_bound, upper_bound]
+                    'count': int(outlier_count),
+                    'rate': float(outlier_count / len(df)),
+                    'bounds': [float(lower_bound), float(upper_bound)]
                 }
         
-        return {
-            'columns_checked': columns,
+                # Auto-clean: clip outliers ke bounds
+                if auto_clean:
+                    # Cast ke float dulu untuk menghindari dtype incompatibility
+                    if df[col].dtype in ['int64', 'int32']:
+                        df[col] = df[col].astype(float)
+                    df.loc[df[col] < lower_bound, col] = float(lower_bound)
+                    df.loc[df[col] > upper_bound, col] = float(upper_bound)
+                    cleaned_count += outlier_count
+
+        result = {
+            'columns_checked': columns_to_check,
             'outliers': outliers,
+            'cleaned_count': cleaned_count if auto_clean else 0,
             'status': 'PASS' if len(outliers) == 0 else 'WARNING'
         }
-    
-    def generate_quality_report(self, df: pd.DataFrame) -> Dict:
-        """Generate laporan kualitas data lengkap"""
+        
+        return result, df
+
+    def generate_quality_report(self, df: pd.DataFrame, auto_clean: bool = False) -> Dict:
+        """Generate laporan kualitas data lengkap dengan opsi auto-cleaning"""
         numeric_columns = df.select_dtypes(include=[np.number]).columns.tolist()
         
         report = {
@@ -97,6 +126,10 @@ class DataQualityChecker:
             'duplicates': self.check_duplicates(df),
             'numeric_ranges': self.check_numeric_ranges(df, numeric_columns)
         }
+
+        # Check numeric ranges dengan auto-clean jika diaktifkan
+        numeric_result, df = self.check_numeric_ranges(df, numeric_columns, auto_clean=auto_clean)
+        report['numeric_ranges'] = numeric_result
         
         # Overall status
         statuses = [
@@ -112,4 +145,30 @@ class DataQualityChecker:
         else:
             report['overall_status'] = 'PASS'
         
-        return report
+        return report, df
+
+    def save_quality_report(self, report: Dict, output_path: str):
+        """Save quality report to JSON file"""
+        import json
+
+        # Convert numpy types to Python native types for JSON serialization
+        def convert_numpy(obj):
+            if isinstance(obj, dict):
+                return {k: convert_numpy(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_numpy(i) for i in obj]
+            elif isinstance(obj, (np.int64, np.int32)):
+                return int(obj)
+            elif isinstance(obj, (np.float64, np.float32)):
+                return float(obj)
+            elif isinstance(obj, np.ndarray):
+                return obj.tolist()
+            else:
+                return obj
+
+        sanitized_report = convert_numpy(report)
+
+        with open(output_path, 'w', encoding='utf-8') as f:
+            json.dump(sanitized_report, f, indent=2, ensure_ascii=False)
+
+        logger.info(f"Quality report saved to {output_path}")

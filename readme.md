@@ -1,111 +1,136 @@
 # Data Preparation Pipeline
-Pipeline otomatis untuk mempersiapkan dataset kesejahteraan Jawa Timur agar siap digunakan untuk pelatihan model machine learning/LLM.
-## 📋 Deskripsi
-Repo ini berisi pipeline data preparation yang melakukan:
-- **ETL (Extraction, Transformation, Loading)**: Membersihkan dan memvalidasi data mentah
-- **Rebalancing Dataset**: Menyeimbangkan distribusi kelas dengan teknik undersampling
-- **Validasi Output**: Memastikan kualitas data sebelum digunakan untuk modeling
-Pipeline ini dirancang untuk menangani dataset besar (jutaan record) dengan pemrosesan bertahap (chunking) dan logging yang komprehensif.
-## 🏗️ Struktur Direktori
+
+Pipeline otomatis untuk mempersiapkan dataset kesejahteraan (contoh: Jawa Timur) agar siap digunakan untuk analisis dan pelatihan model (ML / LLM). README ini menjelaskan arsitektur, alur, konfigurasi, dan cara menjalankan pipeline secara lengkap.
+
+---
+
+## Ringkasan singkat
+- Entrypoint: [run_pipeline.py](run_pipeline.py)
+- Tiga fase utama: ETL → Rebalancing → Validation
+- Output akhir: `data/processed/training_data_balanced.jsonl` (format JSONL, ChatML-style)
+
+---
+
+## Struktur proyek (highlight)
 ```
-├── configs/                 # File konfigurasi pipeline
-│   ├── data_schema.yaml     # Schema validasi data
-│   ├── labeling_config.yaml # Konfigurasi labeling
-│   ├── pipeline_config.yaml # Pengaturan pipeline utama
-│   └── security_config.yaml # Konfigurasi keamanan
-├── src/                     # Source code modular
-│   ├── ingestion/          # Modul ingest data
-│   ├── labeling/           # Modul labeling
-│   ├── security/           # Modul keamanan & enkripsi
-│   ├── transformation/     # ETL & rebalancing
-│   │   ├── etl_pipeline.py
-│   │   └── rebalance_dataset.py
-│   └── validation/         # Validasi output
-│       ├── validate_output.py
-│       ├── schema_validator.py
-│       └── quality_checker.py
-├── data/                    # Direktori data (buat manual)
-│   ├── raw/                # Data mentah input
-│   ├── processed/          # Data hasil processing
-│   └── logs/               # Log pipeline
-├── .env                     # Environment variables
-├── .gitignore              # Git ignore rules
-├── requirements.txt        # Dependencies Python
-└── run_pipeline.py         # Entry point utama
+configs/
+src/
+   ingestion/
+   labeling/
+   security/
+   transformation/
+   validation/
+data/
+   raw/
+   processed/
+   logs/
+run_pipeline.py
+requirements.txt
+.env
 ```
-## ⚙️ Prasyarat
-- Python 3.8+
-- pip (Python package manager)
-## 🚀 Instalasi
-1. **Clone repository ini**
-   ```bash
-   git clone <repository-url>
-   cd <repository-directory>
-   ```
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. **Setup environment variables**
-   Edit file `.env` dan isi `DATA_SALT` dengan string random untuk keamanan data:
-   ```bash
-   DATA_SALT="your_random_secure_string_here"
-   ```
-   > ⚠️ **Penting**: Ganti `paste_your_random_string_here` dengan string random Anda sendiri sebelum menjalankan pipeline di production.
-4. **Siapkan struktur direktori data**
-   ```bash
-   mkdir -p data/raw data/processed data/logs
-   ```
-5. **Tempatkan data mentah**
-   Letakkan file CSV Anda di `data/raw/dataset_kesejahteraan_jatim.csv`
-## 📖 Cara Penggunaan
-### Menjalankan Pipeline Lengkap
+
+Lihat file konfigurasi di `configs/` dan modul utama di `src/`.
+
+---
+
+## Alur Pipeline (detail)
+
+1) Persiapan & environment
+- `run_pipeline.py` membuat direktori log, memeriksa `DATA_SALT`, dan mengatur path input/output.
+
+2) Fase 1 — ETL (`src/transformation/etl_pipeline.py`)
+- Sumber: [data/raw/dataset_kesejahteraan_jatim.csv](data/raw/dataset_kesejahteraan_jatim.csv)
+- Komponen:
+   - `CSVDataLoader` ([src/ingestion/csv_loader.py](src/ingestion/csv_loader.py)) membaca CSV secara chunked.
+   - `SchemaValidator` ([src/validation/schema_validator.py](src/validation/schema_validator.py)) memeriksa kolom, tipe, dan rentang nilai.
+   - `DataQualityChecker` ([src/validation/quality_checker.py](src/validation/quality_checker.py)) memeriksa kelengkapan, duplikasi, outlier; mendukung auto-clean.
+   - `PIIScrubber` ([src/security/pii_scrubber.py](src/security/pii_scrubber.py)) meng-hash atau menghapus field PII sesuai `security_config.yaml`.
+   - `InstructionFormatter` ([src/labeling/instruction_formatter.py](src/labeling/instruction_formatter.py)) memformat record menjadi ChatML/JSON untuk training.
+- Proses per chunk:
+   1. Sanitasi (hapus koma, casting numeric)
+   2. Validasi schema (drop invalid rows menggunakan mask)
+   3. Quality checks + auto-clean; simpan laporan per chunk ke `data/processed/quality_reports/`
+   4. Scrub PII
+   5. Format ke ChatML dan append ke `data/processed/training_data.jsonl`
+
+3) Fase 2 — Rebalancing (`src/transformation/rebalance_dataset.py`)
+- Baca `training_data.jsonl`, ekstrak field `kategori` dari isi pesan assistant, kelompokkan per kategori, lakukan undersampling untuk kelas mayoritas hingga `target_per_class` (default 100000), shuffle, dan simpan ke `data/processed/training_data_balanced.jsonl`.
+
+4) Fase 3 — Output Validation (`src/validation/validate_output.py`)
+- Validasi integritas ChatML (presence `messages` dan per-role content), hitung distribusi kategori, lakukan token-budget checks, hasilkan `data/processed/validation_report.json`. Jika ada pemeriksaan penting gagal → pipeline exit dengan error.
+
+---
+
+## Diagram alur
+
+![alt text](mermaid-diagram-2026-03-11-094754.png)
+
+---
+
+## Quickstart
+
+1. Install dependency:
+
+```bash
+pip install -r requirements.txt
+```
+
+2. Siapkan `.env` (contoh):
+
+```
+DATA_SALT=replace_with_secure_random_string
+```
+
+3. Siapkan folder data dan letakkan CSV mentah:
+
+```bash
+mkdir -p data/raw data/processed data/logs
+# letakkan dataset CSV di data/raw/dataset_kesejahteraan_jatim.csv
+```
+
+4. Jalankan pipeline (default menjalankan semua fase):
+
 ```bash
 python run_pipeline.py
 ```
-Pipeline akan menjalankan 3 fase secara berurutan:
-#### Fase 1: ETL (Extraction, Transformation, Loading)
-- Membaca data dari `data/raw/dataset_kesejahteraan_jatim.csv`
-- Melakukan cleaning dan transformasi
-- Menyimpan hasil ke `data/processed/training_data.jsonl`
-#### Fase 2: Rebalancing Dataset
-- Melakukan undersampling untuk menyeimbangkan distribusi kelas
-- Target: 100.000 record per kelas
-- Output: `data/processed/training_data_balanced.jsonl`
-#### Fase 3: Validasi Output
-- Memvalidasi schema dan kualitas data
-- Memastikan data siap untuk modeling
-### Logging
-Semua log tersimpan di:
-- **File**: `data/logs/pipeline.log`
-- **Console**: Output real-time di terminal
-### Konfigurasi
-Edit file di folder `configs/` untuk menyesuaikan:
-- **pipeline_config.yaml**: Chunk size, threshold error, format output
-- **data_schema.yaml**: Schema validasi data
-- **labeling_config.yaml**: Aturan labeling
-- **security_config.yaml**: Pengaturan keamanan
-## 📦 Output
-Setelah pipeline berhasil, Anda akan mendapatkan:
-| File | Deskripsi |
-|------|-----------|
-| `data/processed/training_data.jsonl` | Data hasil ETL |
-| `data/processed/training_data_balanced.jsonl` | Data balanced siap training |
-| `data/logs/pipeline.log` | Log lengkap eksekusi |
-Format output: **JSONL** (JSON Lines) - optimal untuk pelatihan LLM.
-## 🔍 Troubleshooting
-### Error: DATA_SALT not set
-```bash
-# Edit file .env dan isi DATA_SALT dengan string random
-nano .env
+
+Opsi pengembangan (contoh memanggil ETL manual dari REPL):
+
+```python
+from src.transformation.etl_pipeline import ETLPipeline
+pipeline = ETLPipeline(config_dir='configs')
+pipeline.run(input_path='data/raw/dataset_kesejahteraan_jatim.csv', output_dir='data/processed', chunk_size=10000)
 ```
-### Error: File tidak ditemukan
-```bash
-# Pastikan file input ada di lokasi yang benar
-ls data/raw/dataset_kesejahteraan_jatim.csv
+
+---
+
+## Konfigurasi penting
+
+- `configs/data_schema.yaml` — mendefinisikan kolom, tipe, required, min/max, allowed_values.
+- `configs/labeling_config.yaml` — template reasoning, mapping kategori, format output.
+- `configs/security_config.yaml` — daftar `pii_fields` dan aksi (`hash`, `remove`, `keep`).
+- `configs/pipeline_config.yaml` — (opsional) nilai default seperti `chunk_size`, `target_per_class`.
+
+Contoh minimal `security_config.yaml`:
+
+```yaml
+pii_fields:
+   - field: nama
+      action: remove
+   - field: nik
+      action: hash
+      reason: audit_required
 ```
-### Error: Dependencies missing
-```bash
-# Install ulang dependencies
-pip install -r requirements.txt --upgrade
-```
+
+---
+
+## Output & Artifak
+
+- `data/processed/training_data.jsonl` — hasil ETL sebelum balancing
+- `data/processed/training_data_balanced.jsonl` — hasil rebalancing siap training
+- `data/processed/pipeline_log.json` — ringkasan metrik run
+- `data/processed/scrub_log.json` — audit trail PII scrub
+- `data/processed/quality_reports/` — quality report per chunk
+- `data/logs/pipeline.log` — log eksekusi
+
+---

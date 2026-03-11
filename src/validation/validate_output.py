@@ -8,24 +8,12 @@ MAX_TOKENS_PER_FIELD = 512
 MAX_TOTAL_TOKENS = 1024     
 
 def estimate_tokens(text):
-    """
-    Estimasi jumlah token sederhana (rata-rata 4 karakter per token untuk Bahasa Indonesia).
-    Untuk produksi, gunakan tokenizer asli dari model yang dituju (misal: tiktoken untuk OpenAI).
-    """
+    """Estimasi jumlah token sederhana (rata-rata 4 karakter per token)."""
     if not text:
         return 0
-    # Estimasi kasar: panjang karakter / 4
     return len(str(text)) // 4
 
 def run_validation(jsonl_file_path, check_tokens=True):
-    """
-    Fungsi validasi output pipeline.
-    Mengecek keberadaan file, integritas JSON, distribusi kategori, dan validasi token.
-
-    Args:
-        jsonl_file_path: Path ke file JSONL yang divalidasi
-        check_tokens: Boolean untuk mengaktifkan pengecekan token (default: True)
-    """
     print("\n" + "=" * 80)
     print(f"🔍 STARTING OUTPUT VALIDATION: {jsonl_file_path}")
     if check_tokens:
@@ -48,30 +36,26 @@ def run_validation(jsonl_file_path, check_tokens=True):
         }
     }
 
-    # Konfigurasi kategori yang diharapkan
     expected_categories = [
         "Sangat Miskin", "Miskin", "Rentan Miskin",
         "Hampir Miskin", "Menengah Bawah", "Menengah Ke Atas"
     ]
     kategori_counts = {kat: 0 for kat in expected_categories}
     
-    # 1. Cek keberadaan file
     if not jsonl_path.exists():
         print(f"   ❌ File not found: {jsonl_path}")
         validation_results['status'] = 'FAIL'
         return validation_results
 
-    # 2. Validasi Konten (Single Pass / Sekali Baca)
     line_count = 0
     invalid_json = 0
     missing_fields_count = 0
     
-    # Stats untuk token
     total_tokens = 0
     max_tokens_record = 0
     exceeding_records = []
 
-    print(f"   📂 Analyzing records...")
+    print(f"   📂 Analyzing records (ChatML format)...")
     
     with open(jsonl_path, 'r', encoding='utf-8') as f:
         for i, line in enumerate(f):
@@ -79,54 +63,63 @@ def run_validation(jsonl_file_path, check_tokens=True):
             try:
                 record = json.loads(line)
                 
-                # Cek field utama
-                required_fields = ['instruction', 'input', 'output', 'metadata']
-                if not all(field in record for field in required_fields):
+                # VALIDASI STRUKTUR CHATML
+                if 'messages' not in record or not isinstance(record['messages'], list):
                     missing_fields_count += 1
                     continue
 
-                # Cek struktur output JSON
-                output_data = json.loads(record['output'])
-                kat = output_data.get('kategori', 'Unknown')
+                messages = record['messages']
                 
-                if kat in kategori_counts:
-                    kategori_counts[kat] += 1
-                else:
-                    kategori_counts[kat] = kategori_counts.get(kat, 0) + 1
+                # Ekstrak konten berdasarkan role
+                system_content = next((m.get('content', '') for m in messages if m.get('role') == 'system'), '')
+                user_content = next((m.get('content', '') for m in messages if m.get('role') == 'user'), '')
+                assistant_content = next((m.get('content', '') for m in messages if m.get('role') == 'assistant'), '')
                 
-                # --- TOKEN VALIDATION ---
+                if not assistant_content:
+                    missing_fields_count += 1
+                    continue
+
+                # VALIDASI KATEGORI (Dari dalam output JSON assistant)
+                try:
+                    output_data = json.loads(assistant_content)
+                    kat = output_data.get('kategori', 'Unknown')
+                except json.JSONDecodeError:
+                    kat = 'Unknown'
+                    invalid_json += 1
+                
+                kategori_counts[kat] = kategori_counts.get(kat, 0) + 1
+                
+                # TOKEN VALIDATION
                 if check_tokens:
-                    instruction_tokens = estimate_tokens(record.get('instruction', ''))
-                    input_tokens = estimate_tokens(record.get('input', ''))
-                    output_tokens = estimate_tokens(record.get('output', ''))
+                    sys_tokens = estimate_tokens(system_content)
+                    usr_tokens = estimate_tokens(user_content)
+                    ast_tokens = estimate_tokens(assistant_content)
 
-                    total_record_tokens = instruction_tokens + input_tokens + output_tokens
+                    total_record_tokens = sys_tokens + usr_tokens + ast_tokens
 
-                    # Update stats
                     total_tokens += total_record_tokens
                     if total_record_tokens > max_tokens_record:
                         max_tokens_record = total_record_tokens
 
-                    # Cek apakah melebihi batas
                     field_violations = []
-                    if instruction_tokens > MAX_TOKENS_PER_FIELD:
-                        field_violations.append(f'instruction({instruction_tokens})')
-                    if input_tokens > MAX_TOKENS_PER_FIELD:
-                        field_violations.append(f'input({input_tokens})')
-                    if output_tokens > MAX_TOKENS_PER_FIELD:
-                        field_violations.append(f'output({output_tokens})')
+                    if sys_tokens > MAX_TOKENS_PER_FIELD:
+                        field_violations.append(f'system({sys_tokens})')
+                    if usr_tokens > MAX_TOKENS_PER_FIELD:
+                        field_violations.append(f'user({usr_tokens})')
+                    if ast_tokens > MAX_TOKENS_PER_FIELD:
+                        field_violations.append(f'assistant({ast_tokens})')
                     if total_record_tokens > MAX_TOTAL_TOKENS:
                         field_violations.append(f'total({total_record_tokens})')
 
                     if field_violations:
                         validation_results['token_stats']['records_exceeding_limit'] += 1
-                        if len(exceeding_records) < 5:  # Simpan max 5 sampel
+                        if len(exceeding_records) < 5:
                             exceeding_records.append({
                                 'line_number': line_count,
                                 'tokens': {
-                                    'instruction': instruction_tokens,
-                                    'input': input_tokens,
-                                    'output': output_tokens,
+                                    'system': sys_tokens,
+                                    'user': usr_tokens,
+                                    'assistant': ast_tokens,
                                     'total': total_record_tokens
                                 },
                                 'violations': field_violations
@@ -135,13 +128,9 @@ def run_validation(jsonl_file_path, check_tokens=True):
             except (json.JSONDecodeError, TypeError):
                 invalid_json += 1
 
-    # Hitung Ukuran File
     file_size_mb = jsonl_path.stat().st_size / 1024 / 1024
-
-    # Hitung rata-rata token
     avg_tokens = total_tokens / line_count if line_count > 0 else 0
 
-    # Simpan hasil ke dictionary
     validation_results['checks'].append({
         'name': 'integrity_check',
         'records': line_count,
@@ -151,7 +140,6 @@ def run_validation(jsonl_file_path, check_tokens=True):
     })
     validation_results['kategori_distribution'] = kategori_counts
 
-    # Simpan stats token
     if check_tokens:
         validation_results['token_stats']['total_records_checked'] = line_count
         validation_results['token_stats']['max_tokens_found'] = max_tokens_record
@@ -165,7 +153,6 @@ def run_validation(jsonl_file_path, check_tokens=True):
                 'exceeding_count': validation_results['token_stats']['records_exceeding_limit'],
                 'message': f"{validation_results['token_stats']['records_exceeding_limit']} records exceed token limits"
             })
-            # warning saja karena bisa di-handle saat training
         else:
             validation_results['checks'].append({
                 'name': 'token_limit_check',
@@ -173,7 +160,6 @@ def run_validation(jsonl_file_path, check_tokens=True):
                 'message': 'All records within token limits'
             })
 
-    # 3. Tampilkan Laporan di Terminal
     print(f"   ✅ Total Records: {line_count:,}")
     print(f"   💾 File Size: {file_size_mb:.2f} MB")
     
@@ -189,7 +175,13 @@ def run_validation(jsonl_file_path, check_tokens=True):
         bar = "█" * int(pct / 2)
         print(f"   {kat:20s} | {count:>10,} | {pct:>6.2f}% | {bar}")
     
-    # Tampilkan Token Stats jika diaktifkan
+    # Kategori di luar ekspektasi (Unknown dll)
+    other_kats = {k: v for k, v in kategori_counts.items() if k not in expected_categories}
+    for kat, count in other_kats.items():
+        pct = (count / line_count * 100) if line_count > 0 else 0
+        bar = "▒" * int(pct / 2)
+        print(f"   {kat:20s} | {count:>10,} | {pct:>6.2f}% | {bar}")
+
     if check_tokens:
         print("\n   🪙 TOKEN STATISTICS:")
         print("   " + "-" * 70)
@@ -207,27 +199,14 @@ def run_validation(jsonl_file_path, check_tokens=True):
         else:
             print(f"   ✅ All records are within token limits!")
 
-    # 4. Validasi Log Files Tambahan
-    other_checks = [
-        ('pipeline_log.json', Path('data/processed/pipeline_log.json')),
-        ('scrub_log.json', Path('data/processed/scrub_log.json')),
-        ('pipeline.log', Path('data/logs/pipeline.log'))
-    ]
-
-    print("\n🔍 CHECKING LOG FILES:")
-    for name, path in other_checks:
-        status = "✅ EXISTS" if path.exists() else "⚠️  MISSING"
-        print(f"   - {name:20s}: {status}")
-        validation_results['checks'].append({'name': name, 'status': 'PASS' if path.exists() else 'WARNING'})
-
-    # Simpan Laporan Akhir
     report_path = Path('data/processed/validation_report.json')
+    report_path.parent.mkdir(parents=True, exist_ok=True)
     with open(report_path, 'w', encoding='utf-8') as f:
         json.dump(validation_results, f, indent=2)
 
     if validation_results['status'] == 'PASS':
         print("\n" + "=" * 80)
-        print("✅ ALL VALIDATION CHECKS PASSED! Data is ready for Phase 2.")
+        print("✅ ALL VALIDATION CHECKS PASSED! Data is ready for Model Training.")
         print("=" * 80)
     else:
         print("\n" + "=" * 80)
@@ -237,5 +216,4 @@ def run_validation(jsonl_file_path, check_tokens=True):
     return validation_results
 
 if __name__ == "__main__":
-    # Path default jika dijalankan manual
     run_validation('data/processed/training_data_balanced.jsonl', check_tokens=True)

@@ -5,9 +5,6 @@ from pathlib import Path
 from collections import defaultdict
 from typing import Dict, Union
 
-# Configure logging for module use
-logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
-
 def rebalance_undersample(
     input_path: Union[str, Path],
     output_path: Union[str, Path],
@@ -15,16 +12,7 @@ def rebalance_undersample(
     random_seed: int = 42
 ) -> Dict[str, int]:
     """
-    Reads a JSONL dataset, undersamples majority classes, and saves a balanced dataset.
-    
-    Args:
-        input_path: Path to the raw JSONL file.
-        output_path: Path to save the balanced JSONL file.
-        target_per_class: Maximum number of records to keep per category.
-        random_seed: Seed for reproducibility.
-        
-    Returns:
-        A dictionary mapping each category to its final record count.
+    Reads a ChatML JSONL dataset, undersamples majority classes, and saves a balanced dataset.
     """
     random.seed(random_seed)
     input_file = Path(input_path)
@@ -42,24 +30,33 @@ def rebalance_undersample(
         for line_num, line in enumerate(f, start=1):
             try:
                 record = json.loads(line)
+                kategori = None
                 
-                # Handle nested JSON string safely
-                output_data = record.get('output', '{}')
-                if isinstance(output_data, str):
-                    output_data = json.loads(output_data)
-                    
-                kategori = output_data.get('kategori')
+                # EKSTRAKSI CHATML: Cari pesan dari assistant
+                messages = record.get('messages', [])
+                for msg in messages:
+                    if msg.get('role') == 'assistant':
+                        assistant_content = msg.get('content', '{}')
+                        # Parse string JSON di dalam content assistant
+                        try:
+                            content_data = json.loads(assistant_content)
+                            kategori = content_data.get('kategori')
+                        except json.JSONDecodeError:
+                            logging.warning(f"Assistant content bukan JSON valid di baris {line_num}")
+                        break # Berhenti mencari jika assistant sudah ditemukan
+                
+                # Jika tidak ada kategori yang ditemukan, lewati record ini
                 if not kategori:
                     continue
 
                 kategori_groups[kategori].append(record)
                 total_loaded += 1
                 
-            except (json.JSONDecodeError, KeyError) as e:
+            except json.JSONDecodeError as e:
                 logging.warning(f"Skipping malformed data at line {line_num}: {e}")
 
     if total_loaded == 0:
-        raise ValueError("No valid records loaded. Check file format.")
+        raise ValueError("No valid records loaded. Pastikan format file sudah menggunakan ChatML yang benar.")
 
     logging.info(f"Successfully loaded {total_loaded:,} valid records.")
 
@@ -93,7 +90,6 @@ def rebalance_undersample(
 
 
 if __name__ == "__main__":
-    # Execution block allows testing the file directly while keeping it modular
     try:
         final_counts = rebalance_undersample(
             input_path='data/processed/training_data.jsonl',

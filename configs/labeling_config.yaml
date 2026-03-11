@@ -1,6 +1,6 @@
 labeling_version: "1.0.0"
 
-# Output format
+# Output format untuk LLM training
 output_format:
   type: json
   required_fields:
@@ -15,7 +15,7 @@ reasoning_template: |
   
   **Kondisi Ekonomi:**
   - Pendapatan per kapita: Rp {pendapatan_perkapita:,}
-  - Tabungan: Rp {tabungan:,}
+  - Memiliki Tabungan: {tabungan}
   
   **Aset yang Dimiliki:**
   - Kendaraan: {motor} motor, {mobil} mobil
@@ -62,12 +62,3 @@ categories:
     code: "MA"
     priority: 6
     description: "Kesejahteraan menengah level atas"
-
-# Output format untuk LLM training
-output_format:
-  type: json
-  required_fields:
-    - kategori
-    - confidence
-    - reasoning
-    - key_factors

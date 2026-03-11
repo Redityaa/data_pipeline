@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class InstructionFormatter:
     """
     Format data menjadi instruction format untuk training LLM
-    Output: JSONL format siap untuk fine-tuning
+    Output: JSONL format (ChatML) siap untuk fine-tuning Qwen
     """
     
     def __init__(self, config_path: str):
@@ -18,44 +18,33 @@ class InstructionFormatter:
         self.reasoning_template = self.config.get('reasoning_template', '')
         
     def _load_config(self, config_path: str) -> Dict:
-        with open(config_path, 'r') as f:
+        # PERBAIKAN 1: Memaksa encoding UTF-8 agar karakter seperti m² tidak rusak menjadi mÂ²
+        with open(config_path, 'r', encoding='utf-8') as f:
             return yaml.safe_load(f)
     
     def format_record(self, record: Dict) -> Dict:
-        """
-        Format satu record menjadi instruction format
+        system_prompt = "Anda adalah asisten AI ahli di bidang ekonomi dan statistik sosial. Tugas Anda adalah menganalisis data rumah tangga, mengklasifikasikan tingkat kesejahteraan, dan memberikan reasoning yang masuk akal."
         
-        Returns:
-            Dict dengan format instruction-input-output
-        """
-        # Build instruction
-        instruction = self._build_instruction()
-        
-        # Build input section
-        input_data = self._build_input_section(record)
-        
-        # Build output section
-        output_data = self._build_output_section(record)
+        user_content = f"{self._build_instruction()}\n\nData Rumah Tangga:\n{self._build_input_section(record)}"
+        assistant_content = self._build_output_section(record)
         
         return {
-            'instruction': instruction,
-            'input': input_data,
-            'output': output_data,
-            'metadata': {
-                'kategori': record.get('kategori'),
-                'desil': record.get('desil'),
-                'wealth_index': record.get('wealth_index')
-            }
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content},
+                {"role": "assistant", "content": assistant_content}
+            ]
         }
     
     def _build_instruction(self) -> str:
-        """Build instruction text"""
         return """Berdasarkan data rumah tangga berikut, klasifikasikan tingkat kesejahteraan 
 dan berikan reasoning yang jelas. Analisis faktor ekonomi, aset, perumahan, dan kerentanan.
 Output dalam format JSON dengan field: kategori, confidence, reasoning, key_factors, recommendation."""
     
     def _build_input_section(self, record: Dict) -> str:
-        """Build input data section"""
+        money_fields = ['pendapatan', 'pendapatan_perkapita']
+        boolean_fields = ['tabungan', 'air_layak', 'sanitasi_layak']
+        
         input_fields = [
             'wilayah', 'pendidikan', 'pekerjaan_kepala_keluarga',
             'pendapatan', 'pendapatan_perkapita', 'tabungan',
@@ -69,19 +58,26 @@ Output dalam format JSON dengan field: kategori, confidence, reasoning, key_fact
         for field in input_fields:
             if field in record and pd.notna(record[field]):
                 value = record[field]
-                if isinstance(value, (int, float)):
-                    lines.append(f"- {field}: {value:,.0f}" if field in ['pendapatan', 'pendapatan_perkapita', 'tabungan'] else f"- {field}: {value}")
+                
+                if field in money_fields:
+                    formatted_value = f"Rp {value:,.0f}"
+                elif field in boolean_fields:
+                    formatted_value = "Ya" if value == 1 else "Tidak"
                 else:
-                    lines.append(f"- {field}: {value}")
-        
+                    formatted_value = str(value)
+                    
+                lines.append(f"- {field}: {formatted_value}")
+                
         return '\n'.join(lines)
     
     def _build_output_section(self, record: Dict) -> str:
-        """Build output JSON section"""
         kategori = record.get('kategori', 'Unknown')
-        confidence = self._calculate_confidence(record)
-        reasoning = self._generate_reasoning(record, kategori)
-        key_factors = self._extract_key_factors(record)
+        
+        # PERBAIKAN 2: Membulatkan angka float untuk menghemat ratusan ribu token
+        confidence = round(self._calculate_confidence(record), 2)
+        
+        reasoning = self._generate_reasoning(record, kategori) 
+        key_factors = self._extract_key_factors(record, kategori)
         
         output = {
             'kategori': kategori,
@@ -92,28 +88,15 @@ Output dalam format JSON dengan field: kategori, confidence, reasoning, key_fact
         
         return json.dumps(output, ensure_ascii=False)
     
-    def _calculate_confidence(self, record: Dict) -> float:
-        """Calculate confidence score based on data completeness"""
-        # Simple heuristic - can be improved
-        base_confidence = 0.8
-        
-        # Adjust based on data quality indicators
-        if record.get('pendapatan_perkapita', 0) > 0:
-            base_confidence += 0.05
-        if record.get('tabungan', 0) >= 0:
-            base_confidence += 0.05
-        if record.get('overall_kelayakan_rumah', 0) > 0:
-            base_confidence += 0.05
-        
-        return min(base_confidence, 0.95)
-    
     def _generate_reasoning(self, record: Dict, kategori: str) -> str:
-        """Generate reasoning text dari template"""
         try:
             reasoning = self.reasoning_template.format(
                 kategori=kategori,
                 pendapatan_perkapita=record.get('pendapatan_perkapita', 0),
-                tabungan=record.get('tabungan', 0),
+                
+                # PERBAIKAN 3: Mengonversi 1/0 menjadi teks manusiawi untuk reasoning LLM
+                tabungan="Ya" if record.get('tabungan') == 1 else "Tidak",
+                
                 motor=record.get('motor', 0),
                 mobil=record.get('mobil', 0),
                 kulkas=record.get('kulkas', 0),
@@ -122,7 +105,7 @@ Output dalam format JSON dengan field: kategori, confidence, reasoning, key_fact
                 luas_rumah=record.get('luas_rumah', 0),
                 daya_listrik=record.get('daya_listrik', 0),
                 overall_kelayakan_rumah=record.get('overall_kelayakan_rumah', 0),
-                faktor_kerentanan=self._get_faktor_kerentanan(record),
+                faktor_kerentanan=self._get_faktor_kerentanan(record, kategori),
                 confidence=int(self._calculate_confidence(record) * 100),
             )
         except Exception as e:
@@ -131,73 +114,75 @@ Output dalam format JSON dengan field: kategori, confidence, reasoning, key_fact
         
         return reasoning
     
-    def _get_faktor_kerentanan(self, record: Dict) -> str:
-        """Determine vulnerability factors berdasarkan 6 kategori"""
+    def _get_faktor_kerentanan(self, record: Dict, kategori: str) -> str:
         factors = []
         pendapatan = record.get('pendapatan_perkapita', 0)
         tabungan = record.get('tabungan', 0)
         aset_kendaraan = record.get('motor', 0) + record.get('mobil', 0)
         
-        if tabungan == 0:
-            factors.append("Tidak ada tabungan (rentan terhadap guncangan ekonomi)")
+        kategori_lower = str(kategori).lower()
+        is_upper_class = any(k in kategori_lower for k in ['atas', 'kaya', 'tinggi'])
         
+        if is_upper_class:
+            if pendapatan < 1500000:
+                factors.append("Anomali data: Pendapatan dilaporkan sangat rendah namun tidak mencerminkan gaya hidup/aset aktual (potensi underreporting)")
+            if aset_kendaraan == 0:
+                factors.append("Aset mobilitas tidak tercatat, namun terkompensasi oleh indikator kesejahteraan lainnya")
+            return "; ".join(factors) if factors else "Tidak ada faktor kerentanan yang mengancam stabilitas ekonomi"
+            
+        if tabungan == 0 or tabungan == "Tidak":
+            factors.append("Tidak memiliki bantalan tabungan (sangat rentan terhadap guncangan ekonomi)")
+            
         if pendapatan < 1500000:
-            factors.append("Pendapatan di bawah garis kemiskinan ekstrem")
+            factors.append("Pendapatan berada di level kemiskinan ekstrem")
         elif pendapatan < 2500000:
-            factors.append("Pendapatan di bawah garis kemiskinan")
-        elif pendapatan < 3500000:
-            factors.append("Pendapatan rentan jatuh ke bawah garis kemiskinan")
-        elif pendapatan < 5000000:
-            factors.append("Pendapatan mendekati garis kemiskinan")
-        
+            factors.append("Pendapatan berada di bawah garis kemiskinan standar")
+            
         if aset_kendaraan == 0:
-            factors.append("Tidak memiliki kendaraan bermotor")
-    
+            factors.append("Ketiadaan aset kendaraan membatasi mobilitas ekonomi")
+            
         return "; ".join(factors) if factors else "Tidak ada faktor kerentanan signifikan"
     
-    def _extract_key_factors(self, record: Dict) -> List[str]:
-        """Extract key factors dari record"""
+    def _extract_key_factors(self, record: Dict, kategori: str) -> List[str]:
         factors = []
         pendapatan = record.get('pendapatan_perkapita', 0)
         tabungan = record.get('tabungan', 0)
         aset_kendaraan = record.get('motor', 0) + record.get('mobil', 0)
-        daya_listrik = record.get('daya_listrik', 0)
+        aset_elektronik = record.get('kulkas', 0) + record.get('tv', 0) + record.get('mesin_cuci', 0)
         kelayakan = record.get('overall_kelayakan_rumah', 0)
         
-        # Faktor pendapatan
-        if pendapatan < 1500000:
-            factors.append('pendapatan_sangat_rendah')
-        elif pendapatan < 2500000:
-            factors.append('pendapatan_rendah')
-        elif pendapatan < 3500000:
-            factors.append('pendapatan_rentan')
-        elif pendapatan < 5000000:
-            factors.append('pendapatan_mendekati_garis_kemiskinan')
+        kategori_lower = str(kategori).lower()
+        is_upper_class = any(k in kategori_lower for k in ['atas', 'kaya', 'tinggi'])
         
-        # Faktor tabungan
-        if tabungan == 0:
-            factors.append('tanpa_tabungan')
-        elif tabungan < 3000000:
-            factors.append('tabungan_minimal')
-        
-        # Faktor aset
-        if aset_kendaraan == 0:
-            factors.append('tanpa_aset_kendaraan')
-        
-        # Faktor perumahan
-        if daya_listrik <= 450:
-            factors.append('daya_listrik_rendah')
-        
-        if kelayakan < 0.5:
-            factors.append('kelayakan_rumah_rendah')
-        
+        if is_upper_class:
+            if kelayakan >= 0.7:
+                factors.append('kondisi_perumahan_sangat_layak')
+            if aset_elektronik >= 2:
+                factors.append('kepemilikan_aset_elektronik_memadai')
+            if tabungan == 1 or tabungan == "Ya":
+                factors.append('memiliki_ketahanan_finansial_tabungan')
+            if record.get('pendidikan', '').lower() in ['sarjana', 'diploma', 's1', 's2', 's3']:
+                factors.append('pendidikan_kepala_keluarga_tinggi')
+            if pendapatan < 1500000:
+                factors.append('indikasi_underreported_income')
+        else:
+            if pendapatan < 1500000:
+                factors.append('pendapatan_sangat_rendah')
+            if tabungan == 0 or tabungan == "Tidak":
+                factors.append('tanpa_tabungan')
+            if aset_kendaraan == 0:
+                factors.append('tanpa_aset_kendaraan')
+            if kelayakan < 0.6:
+                factors.append('kelayakan_rumah_buruk')
+                
+        if not factors:
+            factors.append('profil_campuran_tanpa_dominasi_ekstrem')
+            
         return factors
     
     def _calculate_confidence(self, record: Dict) -> float:
-        """Calculate confidence score based on data completeness"""
         base_confidence = 0.80
         
-        # Adjust based on data quality indicators
         if record.get('pendapatan_perkapita', 0) > 0:
             base_confidence += 0.03
         if record.get('tabungan', 0) >= 0:
@@ -208,16 +193,10 @@ Output dalam format JSON dengan field: kategori, confidence, reasoning, key_fact
             base_confidence += 0.01
         if record.get('luas_rumah', 0) > 0:
             base_confidence += 0.02
-        
+            
         return min(base_confidence, 0.95)
 
     def format_dataframe(self, df) -> List[Dict]:
-        """
-        Format seluruh DataFrame menjadi instruction format
-        
-        Returns:
-            List of Dict dalam format instruction-input-output
-        """
         formatted_records = []
         
         for idx, row in df.iterrows():
@@ -234,11 +213,9 @@ Output dalam format JSON dengan field: kategori, confidence, reasoning, key_fact
                 continue
         
         logger.info(f"Formatting completed: {len(formatted_records)} records")
-        
         return formatted_records
     
     def save_jsonl(self, records: List[Dict], output_path: str):
-        """Save formatted records ke JSONL file"""
         output_file = Path(output_path)
         output_file.parent.mkdir(parents=True, exist_ok=True)
         

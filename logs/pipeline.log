@@ -1,0 +1,60 @@
+2026-04-02 09:49:17,000 [INFO] pipeline — ============================================================
+2026-04-02 09:49:17,000 [INFO] pipeline — Pipeline DTSEN → ChatML/JSONL mulai
+2026-04-02 09:49:17,000 [INFO] pipeline —   Input : C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\data\raw\dataset_dtsen_malang.csv
+2026-04-02 09:49:17,000 [INFO] pipeline —   Output: C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\data\processed\output.jsonl
+2026-04-02 09:49:17,001 [INFO] pipeline —   Chunk : 10,000 baris
+2026-04-02 09:49:17,001 [INFO] pipeline — ============================================================
+2026-04-02 09:49:17,001 [INFO] pipeline — Menghitung total baris CSV …
+2026-04-02 09:49:17,060 [INFO] pipeline — Total baris data: 200,000 (0.1s)
+2026-04-02 09:49:36,331 [INFO] pipeline — ============================================================
+2026-04-02 09:49:36,332 [INFO] pipeline — Pipeline selesai dalam 19.3 detik
+2026-04-02 09:49:36,332 [INFO] pipeline — Total record ditulis : 100,000
+2026-04-02 09:49:36,332 [INFO] pipeline — Output               : C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\data\processed\output.jsonl
+2026-04-02 09:49:36,333 [INFO] src.cleaner — Missing report ditulis ke C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\logs\missing_report.txt
+2026-04-02 09:49:36,333 [INFO] pipeline — Tidak ada missing values yang ditemukan.
+2026-04-02 09:49:36,333 [INFO] pipeline — ============================================================
+2026-04-06 11:43:58,173 [INFO] pipeline — ============================================================
+2026-04-06 11:43:58,174 [INFO] pipeline — Pipeline DTSEN → ChatML/JSONL mulai
+2026-04-06 11:43:58,174 [INFO] pipeline —   Input : C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\data\raw\dataset_dtsen_malang.csv
+2026-04-06 11:43:58,174 [INFO] pipeline —   Output: C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\data\processed\output.jsonl
+2026-04-06 11:43:58,174 [INFO] pipeline —   Chunk : 10,000 baris
+2026-04-06 11:43:58,175 [INFO] pipeline — ============================================================
+2026-04-06 11:43:58,176 [INFO] pipeline — Menghitung total baris CSV …
+2026-04-06 11:43:58,297 [INFO] pipeline — Total baris data: 200,000 (0.1s)
+2026-04-06 11:44:27,809 [INFO] pipeline — ============================================================
+2026-04-06 11:44:27,809 [INFO] pipeline — Pipeline selesai dalam 29.5 detik
+2026-04-06 11:44:27,810 [INFO] pipeline — Total record ditulis : 100,000
+2026-04-06 11:44:27,810 [INFO] pipeline — Output               : C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\data\processed\output.jsonl
+2026-04-06 11:44:27,813 [INFO] src.cleaner — Missing report ditulis ke C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\logs\missing_report.txt
+2026-04-06 11:44:27,814 [INFO] pipeline — Tidak ada missing values yang ditemukan.
+2026-04-06 11:44:27,814 [INFO] pipeline — ============================================================
+2026-04-06 11:45:47,347 [INFO] pipeline — ============================================================
+2026-04-06 11:45:47,347 [INFO] pipeline — Pipeline DTSEN → ChatML/JSONL mulai
+2026-04-06 11:45:47,347 [INFO] pipeline —   Input : C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\data\raw\dataset_dtsen_malang.csv
+2026-04-06 11:45:47,348 [INFO] pipeline —   Output: C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\data\processed\output.jsonl
+2026-04-06 11:45:47,348 [INFO] pipeline —   Chunk : 10,000 baris
+2026-04-06 11:45:47,348 [INFO] pipeline — ============================================================
+2026-04-06 11:45:47,349 [INFO] pipeline — Menghitung total baris CSV …
+2026-04-06 11:45:47,436 [INFO] pipeline — Total baris data: 200,000 (0.1s)
+2026-04-06 11:46:19,419 [INFO] pipeline — ============================================================
+2026-04-06 11:46:19,419 [INFO] pipeline — Pipeline selesai dalam 32.0 detik
+2026-04-06 11:46:19,419 [INFO] pipeline — Total record ditulis : 100,000
+2026-04-06 11:46:19,420 [INFO] pipeline — Output               : C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\data\processed\output.jsonl
+2026-04-06 11:46:19,421 [INFO] src.cleaner — Missing report ditulis ke C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\logs\missing_report.txt
+2026-04-06 11:46:19,422 [INFO] pipeline — Tidak ada missing values yang ditemukan.
+2026-04-06 11:46:19,422 [INFO] pipeline — ============================================================
+2026-04-06 11:52:57,571 [INFO] pipeline — ============================================================
+2026-04-06 11:52:57,572 [INFO] pipeline — Pipeline DTSEN → ChatML/JSONL mulai
+2026-04-06 11:52:57,572 [INFO] pipeline —   Input : C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\data\raw\dataset_dtsen_malang.csv
+2026-04-06 11:52:57,573 [INFO] pipeline —   Output: C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\data\processed\output.jsonl
+2026-04-06 11:52:57,573 [INFO] pipeline —   Chunk : 10,000 baris
+2026-04-06 11:52:57,573 [INFO] pipeline — ============================================================
+2026-04-06 11:52:57,574 [INFO] pipeline — Menghitung total baris CSV …
+2026-04-06 11:52:57,690 [INFO] pipeline — Total baris data: 200,000 (0.1s)
+2026-04-06 11:53:37,327 [INFO] pipeline — ============================================================
+2026-04-06 11:53:37,329 [INFO] pipeline — Pipeline selesai dalam 39.6 detik
+2026-04-06 11:53:37,329 [INFO] pipeline — Total record ditulis : 100,000
+2026-04-06 11:53:37,329 [INFO] pipeline — Output               : C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\data\processed\output.jsonl
+2026-04-06 11:53:37,331 [INFO] src.cleaner — Missing report ditulis ke C:\Users\Legion\OneDrive\Documents\AITF\data_pipeline\logs\missing_report.txt
+2026-04-06 11:53:37,331 [INFO] pipeline — Tidak ada missing values yang ditemukan.
+2026-04-06 11:53:37,331 [INFO] pipeline — ============================================================

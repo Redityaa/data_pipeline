@@ -1,0 +1,46 @@
+# =============================================================================
+# Pipeline Configuration — DTSEN → ChatML/JSONL
+# =============================================================================
+
+paths:
+  input_csv:  "data/raw/dataset_dtsen_malang.csv"
+  output_dir: "data/processed"
+  output_file: "data/processed/output.jsonl"
+  log_dir:    "logs"
+
+processing:
+  chunk_size: 10000        # Baris per chunk (memory-safe)
+  csv_encoding: "utf-8"   # Encoding CSV input
+
+# Kolom yang di-DROP (kode wilayah geografis — tidak ada nilai semantik)
+drop_columns:
+  - kode_provinsi
+  - kode_kabupaten_kota
+  - kode_kecamatan
+  - kode_kelurahan_desa
+  - alamat              # PII: diganti dengan kelurahan_desa
+
+# Kolom PII yang perlu dianonimisasi
+pii_columns:
+  hash:   [nomor_kartu_keluarga]   # SHA-256 truncated → "NKK-XXXXXXXX"
+  mask:   [id_pelanggan_pln]       # → "PLN-XXXXXXXX"
+  redact: [nama_anggota_keluarga]  # → "[NAMA DISEMBUNYIKAN]"
+
+chatml:
+  system_prompt: >
+    Anda adalah sistem ahli analisis profil kesejahteraan sosial yang objektif dan presisi. 
+    
+    Tugas Anda:
+    1. Menganalisis kondisi sosial-ekonomi keluarga berdasarkan deskripsi yang diberikan.
+    2. Memberikan penalaran (reasoning) komprehensif yang mencakup aspek:
+    - Kepemilikan aset dan kualitas hunian.
+    - Komposisi anggota keluarga dan beban ketergantungan.
+    - Stabilitas pendapatan dan akses kebutuhan dasar.
+
+    3. Menentukan skor evaluasi internal (0-100) dan estimasi desil nasional (1-10) berdasarkan kriteria kemiskinan makro yang berlaku.
+
+    Gunakan format output berikut:
+    - Analisis Kondisi: (Bedah poin-poin krusial dari deskripsi)
+    - Reasoning: (Penjelasan mengapa keluarga tersebut masuk ke kategori skor/desil tertentu, hubungkan antar variabel)
+    - Skor Evaluasi: [Angka]
+    - Desil Nasional: [Angka 1-10]

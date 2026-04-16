@@ -297,20 +297,17 @@ Diuji pada dataset DTSEN Kota Malang (100.000 baris input):
 | Ukuran file output | **339.2 MB** |
 | Waktu eksekusi | **~19 detik** |
 | Error struktural | **0** |
-| Rata-rata token/record | **~812 token** *(heuristik len/4)* |
-| Median token/record | **~808 token** |
+| Rata-rata token/record | **~812 token** |
 | Minimum token/record | **710 token** |
 | Maksimum token/record | **928 token** |
 | Record melebihi 1.024 token | **0 (0%)** |
 | Kebocoran kode wilayah/PII | **0** |
 | Missing values | **0** |
 
-### Distribusi Token per Role (heuristik len/4)
+### Distribusi Token per Role
 
 | Role | Rata-rata | Min | Maks |
 |---|---|---|---|
 | `system` | 199 token | 199 | 199 |
 | `user` | ~257 token | 208 | 312 |
 | `assistant` | ~355 token | 301 | 418 |
-
-> **Catatan:** Ukuran token dihitung dengan heuristik `len(full_text) // 4` (standar estimasi cepat untuk teks Indonesia). Nilai aktual tokenizer Qwen2.5 (BPE subword) akan berbeda ±20–30%. Semua record berada di bawah batas **1.024 token**, aman untuk konteks model Qwen2.5-0.5B (maks 32K token).

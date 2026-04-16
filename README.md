@@ -197,16 +197,16 @@ Setiap baris `output.jsonl` adalah satu record JSON dengan skema ChatML:
 {
   "messages": [
     {
-      "role": "system",
-      "content": "Anda adalah sistem ahli analisis profil kesejahteraan sosial. Berdasarkan deskripsi kondisi keluarga yang diberikan, tentukan skor evaluasi dan desil nasional mereka."
+      "role": "system", 
+      "content": "Anda adalah sistem ahli analisis profil kesejahteraan sosial yang objektif dan presisi. \nTugas Anda: 1. Menganalisis kondisi sosial-ekonomi keluarga berdasarkan deskripsi yang diberikan. 2. Memberikan penalaran (reasoning) komprehensif yang mencakup aspek: - Kepemilikan aset dan kualitas hunian. - Komposisi anggota keluarga dan beban ketergantungan. - Stabilitas pendapatan dan akses kebutuhan dasar.\n3. Menentukan skor evaluasi internal (0-100) dan estimasi desil nasional (1-10) berdasarkan kriteria kemiskinan makro yang berlaku.\nGunakan format output berikut: - Analisis Kondisi: (Bedah poin-poin krusial dari deskripsi) - Reasoning: (Penjelasan mengapa keluarga tersebut masuk ke kategori skor/desil tertentu, hubungkan antar variabel) - Skor Evaluasi: [Angka] - Desil Nasional: [Angka 1-10]"
     },
     {
-      "role": "user",
-      "content": "Profil Keluarga:\n\n[Demografi & Lokasi]\nKeluarga ini berlokasi di Kelurahan Madyopuro, Kecamatan Kedungkandang, Kota Malang, Provinsi Jawa Timur. Keluarga terdiri dari 5 orang anggota. Keluarga ini tercatat sebagai penerima Bantuan Iuran Jaminan Kesehatan Nasional (PBI-JKN) dan penerima Bantuan Iuran Pemda.\n\n[Kondisi Perumahan]\nMereka menempati rumah berstatus bebas sewa dengan luas lantai 45 meter persegi. Jenis lantai: semen/bata merah; dinding: anyaman bambu; atap: bambu. Sumber air minum utama dari sumur tak terlindung. Penerangan utama bukan listrik (lampu minyak/lilin/obor). Bahan bakar utama untuk memasak adalah kayu bakar. Fasilitas BAB: tidak ada fasilitas BAB, dengan jenis kloset cemplung/cubluk dan pembuangan akhir tinja ke kolam/sawah/sungai/danau/laut.\n\n[Kepemilikan Aset & Ternak]\nAset bergerak yang dimiliki: smartphone. Tidak memiliki lahan atau rumah lain selain yang dihuni. Tidak memiliki hewan ternak."
+      "role": "user", 
+      "content": "Profil Keluarga:\n\n[Demografi & Lokasi]\nKeluarga ini berlokasi di Kelurahan Arjowinangun, Kecamatan Kedungkandang, Kota Malang, Provinsi Jawa Timur. Keluarga terdiri dari 6 orang anggota. Keluarga ini tercatat sebagai penerima Bantuan Iuran Jaminan Kesehatan Nasional (PBI-JKN) dan penerima Bantuan Iuran Pemda.\n\n[Kondisi Perumahan]\nMereka menempati rumah berstatus lainnya dengan luas lantai 20 meter persegi. Jenis lantai: semen/bata merah; dinding: anyaman bambu; atap: lainnya. Sumber air minum utama dari mata air tak terlindung. Penerangan utama bukan listrik (bukan listrik (lampu minyak/lilin/obor)). Bahan bakar utama untuk memasak adalah briket. Fasilitas BAB: tidak ada fasilitas BAB, dengan jenis kloset cemplung/cubluk dan pembuangan akhir tinja ke pantai/tanah lapang/kebun.\n\n[Kepemilikan Aset & Ternak]\nTidak memiliki aset bergerak yang tercatat. Tidak memiliki lahan atau rumah lain selain yang dihuni. Tidak memiliki hewan ternak."
     },
     {
-      "role": "assistant",
-      "content": "Berdasarkan profil sosio-ekonomi tersebut, keluarga ini memiliki skor evaluasi 0.03 dan masuk dalam kategori Desil Nasional 1."
+      "role": "assistant", 
+      "content": "Analisis Kondisi:\n- Demografi & Lokasi: Keluarga ini berlokasi di Kelurahan Arjowinangun, Kecamatan Kedungkandang, Kota Malang, Provinsi Jawa Timur. Keluarga terdiri dari 6 orang anggota. Keluarga ini tercatat sebagai penerima Bantuan Iuran Jaminan Kesehatan Nasional (PBI-JKN) dan penerima Bantuan Iuran Pemda.\n- Kondisi Perumahan: Mereka menempati rumah berstatus lainnya dengan luas lantai 20 meter persegi. Jenis lantai: semen/bata merah; dinding: anyaman bambu; atap: lainnya. Sumber air minum utama dari mata air tak terlindung. Penerangan utama bukan listrik (bukan listrik (lampu minyak/lilin/obor)). Bahan bakar utama untuk memasak adalah briket. Fasilitas BAB: tidak ada fasilitas BAB, dengan jenis kloset cemplung/cubluk dan pembuangan akhir tinja ke pantai/tanah lapang/kebun.\n- Kepemilikan Aset & Ternak: Tidak memiliki aset bergerak yang tercatat. Tidak memiliki lahan atau rumah lain selain yang dihuni. Tidak memiliki hewan ternak.\n\nReasoning: Jumlah anggota keluarga yang besar (6 orang) mengindikasikan beban ketergantungan tinggi yang menekan kapasitas ekonomi rumah tangga. Tercatatnya keluarga sebagai PBI-JKN nasional dan PBI Pemda menunjukkan pengakuan formal sebagai kelompok rentan/miskin. Minimnya kepemilikan aset bergerak maupun tidak bergerak mencerminkan keterbatasan akumulasi kekayaan dan ketahanan ekonomi yang rendah.\n\nSkor Evaluasi: 0.00\nDesil Nasional: 1"
     }
   ]
 }
@@ -230,9 +230,22 @@ processing:
 
 chatml:
   system_prompt: >
-    Anda adalah sistem ahli analisis profil kesejahteraan sosial.
-    Berdasarkan deskripsi kondisi keluarga yang diberikan, tentukan
-    skor evaluasi dan desil nasional mereka.
+    Anda adalah sistem ahli analisis profil kesejahteraan sosial yang objektif dan presisi. 
+    
+    Tugas Anda:
+    1. Menganalisis kondisi sosial-ekonomi keluarga berdasarkan deskripsi yang diberikan.
+    2. Memberikan penalaran (reasoning) komprehensif yang mencakup aspek:
+    - Kepemilikan aset dan kualitas hunian.
+    - Komposisi anggota keluarga dan beban ketergantungan.
+    - Stabilitas pendapatan dan akses kebutuhan dasar.
+
+    3. Menentukan skor evaluasi internal (0-100) dan estimasi desil nasional (1-10) berdasarkan kriteria kemiskinan makro yang berlaku.
+
+    Gunakan format output berikut:
+    - Analisis Kondisi: (Bedah poin-poin krusial dari deskripsi)
+    - Reasoning: (Penjelasan mengapa keluarga tersebut masuk ke kategori skor/desil tertentu, hubungkan antar variabel)
+    - Skor Evaluasi: [Angka]
+    - Desil Nasional: [Angka 1-10]
 ```
 
 ---

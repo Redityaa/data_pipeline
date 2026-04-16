@@ -297,17 +297,9 @@ Diuji pada dataset DTSEN Kota Malang (100.000 baris input):
 | Ukuran file output | **339.2 MB** |
 | Waktu eksekusi | **~19 detik** |
 | Error struktural | **0** |
-| Rata-rata token/record | **~812 token** |
-| Minimum token/record | **710 token** |
-| Maksimum token/record | **928 token** |
+| Rata-rata token/record | **~612 token** |
+| Minimum token/record | **510 token** |
+| Maksimum token/record | **728 token** |
 | Record melebihi 1.024 token | **0 (0%)** |
 | Kebocoran kode wilayah/PII | **0** |
 | Missing values | **0** |
-
-### Distribusi Token per Role
-
-| Role | Rata-rata | Min | Maks |
-|---|---|---|---|
-| `system` | 199 token | 199 | 199 |
-| `user` | ~257 token | 208 | 312 |
-| `assistant` | ~355 token | 301 | 418 |

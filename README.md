@@ -198,15 +198,36 @@ Setiap baris `output.jsonl` adalah satu record JSON dengan skema ChatML:
   "messages": [
     {
       "role": "system", 
-      "content": "Anda adalah sistem ahli analisis profil kesejahteraan sosial yang objektif dan presisi. \nTugas Anda: 1. Menganalisis kondisi sosial-ekonomi keluarga berdasarkan deskripsi yang diberikan. 2. Memberikan penalaran (reasoning) komprehensif yang mencakup aspek: - Kepemilikan aset dan kualitas hunian. - Komposisi anggota keluarga dan beban ketergantungan. - Stabilitas pendapatan dan akses kebutuhan dasar.\n3. Menentukan skor evaluasi internal (0-100) dan estimasi desil nasional (1-10) berdasarkan kriteria kemiskinan makro yang berlaku.\nGunakan format output berikut: - Analisis Kondisi: (Bedah poin-poin krusial dari deskripsi) - Reasoning: (Penjelasan mengapa keluarga tersebut masuk ke kategori skor/desil tertentu, hubungkan antar variabel) - Skor Evaluasi: [Angka] - Desil Nasional: [Angka 1-10]"
+      "content": "Anda adalah sistem ahli analisis profil kesejahteraan sosial yang objektif dan presisi. 
+      Tugas Anda: 
+      1. Menganalisis kondisi sosial-ekonomi keluarga berdasarkan deskripsi yang diberikan. 
+      2. Memberikan penalaran (reasoning) komprehensif yang mencakup aspek: - Kepemilikan aset dan kualitas hunian. - Komposisi anggota keluarga dan beban ketergantungan. - Stabilitas pendapatan dan akses kebutuhan dasar.
+      3. Menentukan skor evaluasi internal (0-100) dan estimasi desil nasional (1-10) berdasarkan kriteria kemiskinan makro yang berlaku.
+      
+      Gunakan format output berikut: - Analisis Kondisi: (Bedah poin-poin krusial dari deskripsi) 
+      - Reasoning: (Penjelasan mengapa keluarga tersebut masuk ke kategori skor/desil tertentu, hubungkan antar variabel) 
+      - Skor Evaluasi: [Angka] 
+      - Desil Nasional: [Angka 1-10]"
     },
     {
       "role": "user", 
-      "content": "Profil Keluarga:\n\n[Demografi & Lokasi]\nKeluarga ini berlokasi di Kelurahan Arjowinangun, Kecamatan Kedungkandang, Kota Malang, Provinsi Jawa Timur. Keluarga terdiri dari 6 orang anggota. Keluarga ini tercatat sebagai penerima Bantuan Iuran Jaminan Kesehatan Nasional (PBI-JKN) dan penerima Bantuan Iuran Pemda.\n\n[Kondisi Perumahan]\nMereka menempati rumah berstatus lainnya dengan luas lantai 20 meter persegi. Jenis lantai: semen/bata merah; dinding: anyaman bambu; atap: lainnya. Sumber air minum utama dari mata air tak terlindung. Penerangan utama bukan listrik (bukan listrik (lampu minyak/lilin/obor)). Bahan bakar utama untuk memasak adalah briket. Fasilitas BAB: tidak ada fasilitas BAB, dengan jenis kloset cemplung/cubluk dan pembuangan akhir tinja ke pantai/tanah lapang/kebun.\n\n[Kepemilikan Aset & Ternak]\nTidak memiliki aset bergerak yang tercatat. Tidak memiliki lahan atau rumah lain selain yang dihuni. Tidak memiliki hewan ternak."
+      "content": "Profil Keluarga:
+      [Demografi & Lokasi]
+      Keluarga ini berlokasi di Kelurahan Arjowinangun, Kecamatan Kedungkandang, Kota Malang, Provinsi Jawa Timur. Keluarga terdiri dari 6 orang anggota. Keluarga ini tercatat sebagai penerima Bantuan Iuran Jaminan Kesehatan Nasional (PBI-JKN) dan penerima Bantuan Iuran Pemda.
+      [Kondisi Perumahan]
+      Mereka menempati rumah berstatus lainnya dengan luas lantai 20 meter persegi. Jenis lantai: semen/bata merah; dinding: anyaman bambu; atap: lainnya. Sumber air minum utama dari mata air tak terlindung. Penerangan utama bukan listrik (bukan listrik (lampu minyak/lilin/obor)). Bahan bakar utama untuk memasak adalah briket. Fasilitas BAB: tidak ada fasilitas BAB, dengan jenis kloset cemplung/cubluk dan pembuangan akhir tinja ke pantai/tanah lapang/kebun
+      [Kepemilikan Aset & Ternak]
+      Tidak memiliki aset bergerak yang tercatat. Tidak memiliki lahan atau rumah lain selain yang dihuni. Tidak memiliki hewan ternak."
     },
     {
       "role": "assistant", 
-      "content": "Analisis Kondisi:\n- Demografi & Lokasi: Keluarga ini berlokasi di Kelurahan Arjowinangun, Kecamatan Kedungkandang, Kota Malang, Provinsi Jawa Timur. Keluarga terdiri dari 6 orang anggota. Keluarga ini tercatat sebagai penerima Bantuan Iuran Jaminan Kesehatan Nasional (PBI-JKN) dan penerima Bantuan Iuran Pemda.\n- Kondisi Perumahan: Mereka menempati rumah berstatus lainnya dengan luas lantai 20 meter persegi. Jenis lantai: semen/bata merah; dinding: anyaman bambu; atap: lainnya. Sumber air minum utama dari mata air tak terlindung. Penerangan utama bukan listrik (bukan listrik (lampu minyak/lilin/obor)). Bahan bakar utama untuk memasak adalah briket. Fasilitas BAB: tidak ada fasilitas BAB, dengan jenis kloset cemplung/cubluk dan pembuangan akhir tinja ke pantai/tanah lapang/kebun.\n- Kepemilikan Aset & Ternak: Tidak memiliki aset bergerak yang tercatat. Tidak memiliki lahan atau rumah lain selain yang dihuni. Tidak memiliki hewan ternak.\n\nReasoning: Jumlah anggota keluarga yang besar (6 orang) mengindikasikan beban ketergantungan tinggi yang menekan kapasitas ekonomi rumah tangga. Tercatatnya keluarga sebagai PBI-JKN nasional dan PBI Pemda menunjukkan pengakuan formal sebagai kelompok rentan/miskin. Minimnya kepemilikan aset bergerak maupun tidak bergerak mencerminkan keterbatasan akumulasi kekayaan dan ketahanan ekonomi yang rendah.\n\nSkor Evaluasi: 0.00\nDesil Nasional: 1"
+      "content": "Analisis Kondisi:
+      Demografi & Lokasi: Keluarga ini berlokasi di Kelurahan Arjowinangun, Kecamatan Kedungkandang, Kota Malang, Provinsi Jawa Timur. Keluarga terdiri dari 6 orang anggota. Keluarga ini tercatat sebagai penerima Bantuan Iuran Jaminan Kesehatan Nasional (PBI-JKN) dan penerima Bantuan Iuran Pemda.
+      - Kondisi Perumahan: Mereka menempati rumah berstatus lainnya dengan luas lantai 20 meter persegi. Jenis lantai: semen/bata merah; dinding: anyaman bambu; atap: lainnya. Sumber air minum utama dari mata air tak terlindung. Penerangan utama bukan listrik (bukan listrik (lampu minyak/lilin/obor)). Bahan bakar utama untuk memasak adalah briket. Fasilitas BAB: tidak ada fasilitas BAB, dengan jenis kloset cemplung/cubluk dan pembuangan akhir tinja ke pantai/tanah lapang/kebun.
+      - Kepemilikan Aset & Ternak: Tidak memiliki aset bergerak yang tercatat. Tidak memiliki lahan atau rumah lain selain yang dihuni. Tidak memiliki hewan ternak.
+      - Reasoning: Jumlah anggota keluarga yang besar (6 orang) mengindikasikan beban ketergantungan tinggi yang menekan kapasitas ekonomi rumah tangga. Tercatatnya keluarga sebagai PBI-JKN nasional dan PBI Pemda menunjukkan pengakuan formal sebagai kelompok rentan/miskin. Minimnya kepemilikan aset bergerak maupun tidak bergerak mencerminkan keterbatasan akumulasi kekayaan dan ketahanan ekonomi yang rendah.
+      Skor Evaluasi: 0.00
+      Desil Nasional: 1"
     },
   ]
 }
@@ -262,22 +283,34 @@ Validator (`validate_output.py`) melakukan pengecekan berikut secara otomatis:
 | Tidak ada kode wilayah bocor | Regex `\d{2}\.\d{2}` |
 | Tidak ada NKK mentah (16 digit) | Regex `\d{16}` |
 | Tidak ada ID PLN mentah (8+ digit) | Regex + konteks prefix `PLN-` |
-| Estimasi token per record | Heuristik `len(text) / 4` |
+| Estimasi token per record | Heuristik `len(text) / 4` (per record: system+user+assistant) |
 
 ---
 
 ## Hasil Benchmark
 
-Diuji pada dataset DTSEN Kota Malang (200.000 baris input):
+Diuji pada dataset DTSEN Kota Malang (100.000 baris input):
 
 | Metrik | Nilai |
 |---|---|
 | Total record output | **100.000** |
-| Ukuran file output | **138.7 MB** |
+| Ukuran file output | **339.2 MB** |
 | Waktu eksekusi | **~19 detik** |
 | Error struktural | **0** |
-| Rata-rata token/record | **289 token** |
-| Maksimum token/record | **344 token** |
-| Record melebihi 500 token | **0 (0%)** |
+| Rata-rata token/record | **~812 token** *(heuristik len/4)* |
+| Median token/record | **~808 token** |
+| Minimum token/record | **710 token** |
+| Maksimum token/record | **928 token** |
+| Record melebihi 1.024 token | **0 (0%)** |
 | Kebocoran kode wilayah/PII | **0** |
 | Missing values | **0** |
+
+### Distribusi Token per Role (heuristik len/4)
+
+| Role | Rata-rata | Min | Maks |
+|---|---|---|---|
+| `system` | 199 token | 199 | 199 |
+| `user` | ~257 token | 208 | 312 |
+| `assistant` | ~355 token | 301 | 418 |
+
+> **Catatan:** Ukuran token dihitung dengan heuristik `len(full_text) // 4` (standar estimasi cepat untuk teks Indonesia). Nilai aktual tokenizer Qwen2.5 (BPE subword) akan berbeda ±20–30%. Semua record berada di bawah batas **1.024 token**, aman untuk konteks model Qwen2.5-0.5B (maks 32K token).

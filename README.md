@@ -207,7 +207,7 @@ Setiap baris `output.jsonl` adalah satu record JSON dengan skema ChatML:
     {
       "role": "assistant", 
       "content": "Analisis Kondisi:\n- Demografi & Lokasi: Keluarga ini berlokasi di Kelurahan Arjowinangun, Kecamatan Kedungkandang, Kota Malang, Provinsi Jawa Timur. Keluarga terdiri dari 6 orang anggota. Keluarga ini tercatat sebagai penerima Bantuan Iuran Jaminan Kesehatan Nasional (PBI-JKN) dan penerima Bantuan Iuran Pemda.\n- Kondisi Perumahan: Mereka menempati rumah berstatus lainnya dengan luas lantai 20 meter persegi. Jenis lantai: semen/bata merah; dinding: anyaman bambu; atap: lainnya. Sumber air minum utama dari mata air tak terlindung. Penerangan utama bukan listrik (bukan listrik (lampu minyak/lilin/obor)). Bahan bakar utama untuk memasak adalah briket. Fasilitas BAB: tidak ada fasilitas BAB, dengan jenis kloset cemplung/cubluk dan pembuangan akhir tinja ke pantai/tanah lapang/kebun.\n- Kepemilikan Aset & Ternak: Tidak memiliki aset bergerak yang tercatat. Tidak memiliki lahan atau rumah lain selain yang dihuni. Tidak memiliki hewan ternak.\n\nReasoning: Jumlah anggota keluarga yang besar (6 orang) mengindikasikan beban ketergantungan tinggi yang menekan kapasitas ekonomi rumah tangga. Tercatatnya keluarga sebagai PBI-JKN nasional dan PBI Pemda menunjukkan pengakuan formal sebagai kelompok rentan/miskin. Minimnya kepemilikan aset bergerak maupun tidak bergerak mencerminkan keterbatasan akumulasi kekayaan dan ketahanan ekonomi yang rendah.\n\nSkor Evaluasi: 0.00\nDesil Nasional: 1"
-    }
+    },
   ]
 }
 ```
